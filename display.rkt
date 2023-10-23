@@ -4,10 +4,10 @@
 
 (define wbs% (class frame%
                ; Initializations
-               (init top-level-req)                          ; The task object, a type of req%
+               (init top-level-req)                           ; The task object, a type of req%
 
                ; Fields
-               (define main-req top-level-req)               ; The requirements structure being displayed
+               (define main-req top-level-req)                ; The requirements structure being displayed
 
                ; Superclass initialization
                (super-new [label "Gnome Scribe WBS"]
@@ -21,10 +21,10 @@
                ; frame set-icon read-bitmap
 
                ; Methods
-               (define/public (display-wbs)                  ; Displays the main requirement (task)
-                 (display-req main-req main-panel))
+               (define/public (display-wbs)                   ; Displays the main requirement (task)
+                 (display-req main-req main-req main-panel))
                
-               (define (display-req req container)           ; Creates and displays a requirement in a panel
+               (define (display-req req parent-req container) ; Creates and displays a requirement in a panel
                  ; Requirement panel (with sub-requirements)
                  (define panel (new vertical-panel% [parent container]
                                     [style (list 'border)]
@@ -49,14 +49,17 @@
                       [label "Add Sub-Req"]
                       [callback (lambda (button event)
                                   (send req add-new-subreq)
-                                  (send this update-wbs))])
+                                  (update-wbs))])
                  (new button% [parent req-panel]
-                      [label "Delete"])
+                      [label "Delete"]
+                      [callback (lambda (button event)
+                                  (send parent-req remove-subreq req)
+                                  (update-wbs))])
 
                  ; Subrequirements
                  (for ([subreq (send req get-subreqs)]
                        #:unless (empty? req))
-                   (display-req subreq panel)))
+                   (display-req subreq req panel)))
                
                (define/public (update-wbs)                   ; Updates the work breakdown structure to reflect a change
                  (for ([child (send main-panel get-children)]
