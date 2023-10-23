@@ -13,12 +13,6 @@
                (super-new [label "Gnome Scribe WBS"]
                           [width 600]
                           [height 600])
-               
-               (define main-panel (new panel% [parent this]   ; The panel in which the work breakdown structure is displayed
-                                       [style (list 'auto-vscroll 'auto-hscroll)]
-                                       [alignment (list 'left 'top)]))
-
-               ; frame set-icon read-bitmap
 
                ; Methods
                (define/public (display-wbs)                   ; Displays the main requirement (task)
@@ -65,7 +59,27 @@
                  (for ([child (send main-panel get-children)]
                        #:unless (empty? child))
                    (send main-panel delete-child child))
-                 (display-wbs))))
+                 (display-wbs))
+
+               (define (set-up-display)                      ; Sets up the toolbar and sets the frame icon
+                 ; frame set-icon read-bitmap
+                 (define panel (new horizontal-panel% [parent this]
+                                    [style (list 'border)]
+                                    [border 4]
+                                    [alignment (list 'left 'top)]
+                                    [stretchable-height #f]))
+                 (new button% [parent panel]
+                      [label "New"])
+                 (new button% [parent panel]
+                      [label "Open"])
+                 (new button% [parent panel]
+                      [label "Save"]))
+
+               ; Fields (continued) and construction
+               (set-up-display)
+               (define main-panel (new panel% [parent this]   ; The panel in which the work breakdown structure is displayed
+                                       [style (list 'auto-vscroll 'auto-hscroll)]
+                                       [alignment (list 'left 'top)]))))
 
 ; Main method creates a default top-level req% and displays it in the wbs% window
 (module+ main
