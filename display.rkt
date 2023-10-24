@@ -1,6 +1,7 @@
 #lang racket/gui
 (require racket/gui/base)
 (require "req.rkt")
+(require "files.rkt")
 
 (define wbs% (class frame%
                ; Initializations
@@ -55,13 +56,13 @@
                        #:unless (empty? req))
                    (display-req subreq req panel)))
                
-               (define/public (update-wbs)                   ; Updates the work breakdown structure to reflect a change
+               (define/public (update-wbs)                    ; Updates the work breakdown structure to reflect a change
                  (for ([child (send main-panel get-children)]
                        #:unless (empty? child))
                    (send main-panel delete-child child))
                  (display-wbs))
 
-               (define (set-up-display)                      ; Sets up the toolbar and sets the frame icon
+               (define (set-up-display)                       ; Sets up the toolbar and sets the frame icon
                  ; frame set-icon read-bitmap
                  (define panel (new horizontal-panel% [parent this]
                                     [style (list 'border)]
@@ -71,7 +72,9 @@
                  (new button% [parent panel]
                       [label "New"])
                  (new button% [parent panel]
-                      [label "Open"])
+                      [label "Open"]
+                      [callback (lambda (button event)
+                                  (set! main-req (open-wbs (get-file))))])
                  (new button% [parent panel]
                       [label "Save"]))
 
@@ -83,6 +86,8 @@
 
 ; Main method creates a default top-level req% and displays it in the wbs% window
 (module+ main
+  (unless (directory-exists? (string->path "./structures"))
+    (make-directory (string->path "./structures")))
   (define task (new req% [given-name "New Task"]))
   (define frame (new wbs% [top-level-req task]))
   (send frame display-wbs)
