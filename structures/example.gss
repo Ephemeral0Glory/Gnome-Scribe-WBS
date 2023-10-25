@@ -1,0 +1,1 @@
+("Example Task" #f (("req1" #f (("req1a" #t ()) ("req1b" #f ()))) ("req2" #t (("req2a" #t (("req2aI" #t ()) ("req2aII" #t ()))) ("req2b" #t ()))) ("req3" #f (("req3a" #f (("req3aI" #t ()) ("req3aII" #f ()) ("req3aIII" #f (("req3aIII1" #f ()) ("req3aIII2" #t ()))))) ("req3b" #t ())))))

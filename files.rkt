@@ -1,8 +1,10 @@
 #lang racket
 (require "req.rkt")
 
-(provide open-wbs)
+(provide open-wbs save-wbs)
 
+; This file contains all functions for reading and writing files for the
+; Gnome Scribe program.
 (define (open-wbs file-name)        ; Opens the given file and creates a WBS object from the contents
   (when (path? file-name)
     (create-req (read-wbs-file file-name))))
@@ -17,15 +19,33 @@
   (if (or (empty? data-list)
           (empty? (first data-list)))
       empty
-      (for/list ([req-data (first data-list)]) ; (first) allows proper iteration
+      (for/list ([req-data (first data-list)]) ; (first) allows for proper iteration
         (create-req req-data))))
 
-(define (read-wbs-file file-name)   ; Creates a list of data from a file
-  (define input (open-input-file file-name #:mode 'text))
-  (close-input-port input))
+(define (read-wbs-file file-path)   ; Creates a list of data from a file
+  (define input (open-input-file file-path #:mode 'text))
+  (define data (read input))
+  (close-input-port input)
+  data)
+
+(define (save-wbs file-path wbs)              ; Saves the given WBS req% object as a list of lists
+  (define output (open-output-file file-path
+                                   #:mode 'text
+                                   #:exists 'replace))
+  (write (listify-wbs wbs) output)
+  (close-output-port output))
+
+(define (listify-wbs req)                     ; Creates a list of lists representation of a req% object
+  (list (send req get-name)
+        (send req get-status)
+        (let ([subreqs (send req get-subreqs)])
+          (if (empty? subreqs)
+              empty
+              (for/list ([subreq subreqs])
+                (listify-wbs subreq))))))
 
 ; Testing definitions
-(define test-data (list "new task" #f (list
+(define test-data (list "Example Task" #f (list
                                        (list "req1" #f (list
                                                         (list "req1a" #t empty)
                                                         (list "req1b" #f empty)))

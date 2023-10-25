@@ -3,6 +3,8 @@
 (require "req.rkt")
 (require "files.rkt")
 
+; The Gnome Scribe window for Work Breakdown Structures.
+; Maintains the current WBS, with a toolbar to allow for file operations.
 (define wbs% (class frame%
                ; Initializations
                (init top-level-req)                           ; The task object, a type of req%
@@ -70,13 +72,23 @@
                                     [alignment (list 'left 'top)]
                                     [stretchable-height #f]))
                  (new button% [parent panel]
-                      [label "New"])
+                      [label "New"]
+                      [callback (lambda (button event)
+                                  (set! main-req (new req% [given-name "New Project"]))
+                                  (update-wbs))])
                  (new button% [parent panel]
                       [label "Open"]
                       [callback (lambda (button event)
-                                  (set! main-req (open-wbs (get-file))))])
+                                  (let ([file-path (get-file)])
+                                    (unless (boolean? file-path)
+                                      (set! main-req (open-wbs file-path))
+                                      (update-wbs))))])
                  (new button% [parent panel]
-                      [label "Save"]))
+                      [label "Save"]
+                      [callback (lambda (button event)
+                                  (let ([file-path (put-file)])
+                                    (unless (boolean? file-path)
+                                      (save-wbs main-req))))]))
 
                ; Fields (continued) and construction
                (set-up-display)
@@ -88,7 +100,7 @@
 (module+ main
   (unless (directory-exists? (string->path "./structures"))
     (make-directory (string->path "./structures")))
-  (define task (new req% [given-name "New Task"]))
+  (define task (new req% [given-name "New Project"]))
   (define frame (new wbs% [top-level-req task]))
   (send frame display-wbs)
   (send frame show #t))
