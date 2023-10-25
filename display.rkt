@@ -32,6 +32,11 @@
                  (define req-panel (new horizontal-panel% [parent panel]
                                         [alignment (list 'left 'center)]
                                         [stretchable-height #f]))
+                 (new toggle-button% [parent req-panel]
+                      [label-on (read-bitmap (string->path "./assets/expandArrow.jpg")
+                                             'jpeg)]
+                      [label-off (read-bitmap (string->path "./assets/collapseArrow.jpg")
+                                              'jpeg)])
                  (new check-box% [parent req-panel]
                       [label "Complete?"]
                       [value (send req get-status)]
@@ -65,7 +70,7 @@
                  (display-wbs))
 
                (define (set-up-display)                       ; Sets up the toolbar and sets the frame icon
-                 ; frame set-icon read-bitmap
+                 ; TODO frame set-icon read-bitmap
                  (define panel (new horizontal-panel% [parent this]
                                     [style (list 'border)]
                                     [border 4]
@@ -95,6 +100,44 @@
                (define main-panel (new panel% [parent this]   ; The panel in which the work breakdown structure is displayed
                                        [style (list 'auto-vscroll 'auto-hscroll)]
                                        [alignment (list 'left 'top)]))))
+
+; A toggle button for the collapse-expand feature
+(define toggle-button% (class button%
+                         ; Initial arguments
+                         (init [label-on "On"])     ; The display when the button is toggled
+                         (init [label-off "Off"])   ; The display when the button is not toggled
+                         (init [start-position #f]) ; The initial status, #t -> toggled, #f -> not toggled
+                         (init [callback-on #f])    ; The callback when the button is toggled (#f -> #t)
+                         (init [callback-off #f])   ; The callback when the button is untoggled (#t -> #f)
+
+                         ; Fields
+                         (define on-label label-on)     ; The string or image for when status is #t
+                         (define off-label label-off)   ; The string or image for when status is #f
+                         (define status start-position) ; The toggle status of the button
+                         (define on-callback callback-on) ; The function to call when the button is toggled
+                         (define off-callback callback-off) ; The function to call when the button is untoggled
+
+                         ; Super-class initialization
+                         (super-new [label (if start-position label-on label-off)]
+                                    [callback (lambda (button event)
+                                                (send button toggle-button))])
+                         (inherit set-label)
+
+                         ; Methods
+                         (define/public (toggle-button) ; Switches the button between on and off, calling the associated callback
+                           (if status
+                               (untoggle)
+                               (toggle)))
+                         (define (untoggle)                          ; Switches the button from on to off, uses the off callback
+                           (set! status (not status))
+                           (set-label off-label)
+                           (unless (boolean? off-callback)
+                             (off-callback)))
+                         (define (toggle)                            ; Switches the button from off to on, uses the on callback
+                           (set! status (not status))
+                           (set-label on-label)
+                           (unless (boolean? on-callback)
+                             (on-callback)))))
 
 ; Main method creates a default top-level req% and displays it in the wbs% window
 (module+ main
