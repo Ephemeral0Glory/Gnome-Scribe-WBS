@@ -48,7 +48,9 @@
                       [label "Complete?"]
                       [value (send req get-status)]
                       [callback (lambda (button event)
-                                  (send req toggle-status))])
+                                  (send req toggle-status)
+                                  (send parent-req sort-subreqs)
+                                  (update-wbs))])
                  (new text-field% [parent req-panel]
                       [label "Name:"]
                       [init-value (send req get-name)]
