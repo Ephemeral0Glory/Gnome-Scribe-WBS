@@ -23,8 +23,7 @@
                
                (define (display-req req parent-req container) ; Creates and displays a requirement in a panel
                  ; Requirement panel (with sub-requirements)
-                 (define panel (new vertical-panel% [parent container]
-                                    [style (list 'border)]
+                 (define panel (new collapse-vert-panel% [parent container]
                                     [border 8]
                                     [alignment (list 'left 'top)]
                                     [stretchable-height #f]))
@@ -36,7 +35,12 @@
                       [label-on (read-bitmap (string->path "./assets/expandArrow.jpg")
                                              'jpeg)]
                       [label-off (read-bitmap (string->path "./assets/collapseArrow.jpg")
-                                              'jpeg)])
+                                              'jpeg)]
+                      [start-position #t]
+                      [callback-on (lambda ()
+                                     (send panel expand-children))]
+                      [callback-off (lambda ()
+                                      (send panel collapse-children))])
                  (new check-box% [parent req-panel]
                       [label "Complete?"]
                       [value (send req get-status)]
@@ -62,6 +66,14 @@
                  (for ([subreq (send req get-subreqs)]
                        #:unless (empty? req))
                    (display-req subreq req panel)))
+
+               (define (collapse-reqs panel)
+                 (for ([child (rest (send panel get-children))])
+                   (send child show #f)))
+
+               (define (expand-reqs panel)
+                 (for ([child (rest (send panel get-children))])
+                   (send child show #t)))
                
                (define/public (update-wbs)                    ; Updates the work breakdown structure to reflect a change
                  (for ([child (send main-panel get-children)]
@@ -93,7 +105,7 @@
                       [callback (lambda (button event)
                                   (let ([file-path (put-file)])
                                     (unless (boolean? file-path)
-                                      (save-wbs main-req))))]))
+                                      (save-wbs file-path main-req))))]))
 
                ; Fields (continued) and construction
                (set-up-display)
@@ -111,10 +123,10 @@
                          (init [callback-off #f])   ; The callback when the button is untoggled (#t -> #f)
 
                          ; Fields
-                         (define on-label label-on)     ; The string or image for when status is #t
-                         (define off-label label-off)   ; The string or image for when status is #f
-                         (define status start-position) ; The toggle status of the button
-                         (define on-callback callback-on) ; The function to call when the button is toggled
+                         (define on-label label-on)         ; The string or image for when status is #t
+                         (define off-label label-off)       ; The string or image for when status is #f
+                         (define status start-position)     ; The toggle status of the button
+                         (define on-callback callback-on)   ; The function to call when the button is toggled
                          (define off-callback callback-off) ; The function to call when the button is untoggled
 
                          ; Super-class initialization
@@ -128,16 +140,36 @@
                            (if status
                                (untoggle)
                                (toggle)))
-                         (define (untoggle)                          ; Switches the button from on to off, uses the off callback
+                         (define (untoggle)             ; Switches the button from on to off, uses the off callback
                            (set! status (not status))
                            (set-label off-label)
                            (unless (boolean? off-callback)
                              (off-callback)))
-                         (define (toggle)                            ; Switches the button from off to on, uses the on callback
+                         (define (toggle)               ; Switches the button from off to on, uses the on callback
                            (set! status (not status))
                            (set-label on-label)
                            (unless (boolean? on-callback)
                              (on-callback)))))
+
+; A vertical panel that can collapse and expand its children
+(define collapse-vert-panel% (class vertical-panel%
+                               ; Fields
+                               (define collapsed-children empty) ; Holder list for children that are collapsed
+
+                               ; Super-class initialization
+                               (super-new)
+                               (inherit get-children delete-child add-child)
+
+                               ; Methods
+                               (define/public (collapse-children) ; Hide all children besides the first one (which has the req info)
+                                 (for ([child (rest (get-children))])
+                                   (delete-child child)
+                                   (set! collapsed-children
+                                         (append collapsed-children (list child)))))
+                               (define/public (expand-children)   ; Unhide all of the children hidden by collapse-children
+                                 (for ([child collapsed-children])
+                                   (add-child child))
+                                 (set! collapsed-children empty))))
 
 ; Main method creates a default top-level req% and displays it in the wbs% window
 (module+ main
