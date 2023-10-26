@@ -26,7 +26,8 @@
                (define (display-req req parent-req container) ; Creates and displays a requirement in a panel
                  ; Requirement panel (with sub-requirements)
                  (define panel (new collapse-vert-panel% [parent container]
-                                    [border 6]
+                                    [vert-margin 2]
+                                    [horiz-margin 6]
                                     [alignment (list 'left 'center)]
                                     [stretchable-height #f]))
                  ; Info panel
