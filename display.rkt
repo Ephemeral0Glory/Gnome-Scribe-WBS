@@ -15,7 +15,9 @@
                ; Superclass initialization
                (super-new [label "Gnome Scribe WBS"]
                           [width 600]
-                          [height 600])
+                          [height 600]
+                          [x 100]
+                          [y 60])
 
                ; Methods
                (define/public (display-wbs)                   ; Displays the main requirement (task)
@@ -24,8 +26,8 @@
                (define (display-req req parent-req container) ; Creates and displays a requirement in a panel
                  ; Requirement panel (with sub-requirements)
                  (define panel (new collapse-vert-panel% [parent container]
-                                    [border 8]
-                                    [alignment (list 'left 'top)]
+                                    [border 6]
+                                    [alignment (list 'left 'center)]
                                     [stretchable-height #f]))
                  ; Info panel
                  (define req-panel (new horizontal-panel% [parent panel]
@@ -110,7 +112,7 @@
                ; Fields (continued) and construction
                (set-up-display)
                (define main-panel (new panel% [parent this]   ; The panel in which the work breakdown structure is displayed
-                                       [style (list 'auto-vscroll 'auto-hscroll)]
+                                       [style (list 'vscroll 'auto-hscroll)]
                                        [alignment (list 'left 'top)]))))
 
 ; A toggle button for the collapse-expand feature
