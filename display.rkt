@@ -105,7 +105,8 @@
                  (send main-panel refresh))
 
                (define (set-up-display)                       ; Sets up the toolbar and sets the frame icon
-                 ; TODO frame set-icon read-bitmap
+                 ; Frame icon
+                 (send this set-icon (read-bitmap (string->path "./assets/collapseArrow.jpg") 'jpeg))
                  ; Toolbar panel
                  (define panel (new horizontal-panel% [parent this]
                                     [style (list 'border)]
