@@ -34,12 +34,12 @@
                (define/public (remove-subreq req-to-remove) ; Removes the first instance of the given requirement
                  (set! subreqs (remove req-to-remove subreqs)))
                (define/public (sort-subreqs)                ; Sorts the subreqs such that the incompletes are on top
-                 (set! subreqs (sort subreqs (lambda (first second)
-                                               (if (and (send first get-status)
-                                                        (not (send second get-status)))
-                                                   #f
-                                                   (if (and (send second get-status)
-                                                            (not (send first get-status)))
-                                                       #t
-                                                       (and (send first get-status)
-                                                            (send second get-status))))))))))
+                 (set! subreqs (sort subreqs                ; Effectively sorts in-order two lists: complete and incomplete
+                                     (lambda (first second) ; Any movement between lists is appended
+                                       (let ([complete1? (send first get-status)]
+                                             [complete2? (send second get-status)])
+                                         (if (and complete1? (not complete2?))
+                                             #f
+                                             (if (and complete2? (not complete1?))
+                                                 #t
+                                                 (and complete1? complete2?))))))))))

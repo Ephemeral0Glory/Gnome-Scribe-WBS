@@ -30,7 +30,7 @@
                                     [horiz-margin 6]
                                     [alignment (list 'left 'center)]
                                     [stretchable-height #f]))
-                 ; Info panel
+                 ; Requirement data panel
                  (define req-panel (new horizontal-panel% [parent panel]
                                         [alignment (list 'left 'center)]
                                         [stretchable-height #f]))
@@ -47,16 +47,24 @@
                  (new check-box% [parent req-panel]
                       [label "Complete?"]
                       [value (send req get-status)]
-                      [callback (lambda (button event)
+                      [callback (lambda (button event) ; Change the req status, update its color, sort it
                                   (send req toggle-status)
+                                  (send (third (send req-panel get-children))
+                                        set-field-background
+                                        (if (send req get-status)
+                                            (make-color 150 250 160) ; Green for complete
+                                            (make-color 255 175 175))) ; Red for incomplete
                                   (send parent-req sort-subreqs)
+                                  (send container change-children
+                                        (lambda (children)
+                                          (sort-panels children)))
                                   (update-wbs))])
-                 (send (new text-field% [parent req-panel]
-                            [label "Name:"]
-                            [init-value (send req get-name)]
-                            [callback (lambda (field event)
-                                        (send req update-name (send field get-value)))])
-                       set-field-background
+                 (define name (new text-field% [parent req-panel]
+                                   [label "Name:"]
+                                   [init-value (send req get-name)]
+                                   [callback (lambda (field event)
+                                               (send req update-name (send field get-value)))]))
+                 (send name set-field-background
                        (if (send req get-status)
                            (make-color 150 250 160) ; Green for complete
                            (make-color 255 175 175))) ; Red for incomplete
@@ -64,34 +72,41 @@
                       [label "Add Sub-Req"]
                       [callback (lambda (button event)
                                   (send req add-new-subreq)
+                                  (display-req (last (send req get-subreqs)) req panel)
                                   (update-wbs))])
                  (new button% [parent req-panel]
                       [label "Delete"]
                       [callback (lambda (button event)
                                   (send parent-req remove-subreq req)
+                                  (send container delete-child panel)
                                   (update-wbs))])
 
-                 ; Subrequirements
+                 ; Display subrequirements
                  (for ([subreq (send req get-subreqs)]
                        #:unless (empty? req))
                    (display-req subreq req panel)))
 
-               (define (collapse-reqs panel)
-                 (for ([child (rest (send panel get-children))])
-                   (send child show #f)))
+               (define (get-checkbox panel)                   ; Retrieves the check-box widget from a req-panel
+                 (second (send (first (send panel get-children)) get-children)))
 
-               (define (expand-reqs panel)
-                 (for ([child (rest (send panel get-children))])
-                   (send child show #t)))
+               (define (sort-panels panels)                   ; Sorts the given subreq panels in the same way as the subreqs
+                 (append (list (first panels)) ; First panel is the horizontal req-data panel
+                         (sort (rest panels) ; Sub-requirement panels
+                               (lambda (first second)
+                                 (let ([complete1? (send (get-checkbox first) get-value)]
+                                       [complete2? (send (get-checkbox second) get-value)])
+                                   (if (and complete1? (not complete2?))
+                                       #f
+                                       (if (and complete2? (not complete1?))
+                                           #t
+                                           (and complete1? complete2?))))))))
                
                (define/public (update-wbs)                    ; Updates the work breakdown structure to reflect a change
-                 (for ([child (send main-panel get-children)]
-                       #:unless (empty? child))
-                   (send main-panel delete-child child))
-                 (display-wbs))
+                 (send main-panel refresh))
 
                (define (set-up-display)                       ; Sets up the toolbar and sets the frame icon
                  ; TODO frame set-icon read-bitmap
+                 ; Toolbar panel
                  (define panel (new horizontal-panel% [parent this]
                                     [style (list 'border)]
                                     [border 4]
@@ -101,14 +116,14 @@
                       [label "New"]
                       [callback (lambda (button event)
                                   (set! main-req (new req% [given-name "New Project"]))
-                                  (update-wbs))])
+                                  (reset-wbs))])
                  (new button% [parent panel]
                       [label "Open"]
                       [callback (lambda (button event)
                                   (let ([file-path (get-file)])
                                     (unless (boolean? file-path)
                                       (set! main-req (open-wbs file-path))
-                                      (update-wbs))))])
+                                      (reset-wbs))))])
                  (new button% [parent panel]
                       [label "Save"]
                       [callback (lambda (button event)
@@ -116,8 +131,17 @@
                                     (unless (boolean? file-path)
                                       (save-wbs file-path main-req))))]))
 
+               (define (reset-wbs)                                    ; Displays current WBS after clearing main-panel
+                 ; Clear main-panel
+                 (send this delete-child main-panel)
+                 (set! main-panel (new panel% [parent this]
+                                       [style (list 'vscroll 'auto-hscroll)]
+                                       [alignment (list 'left 'top)]))
+                 ; Redisplay
+                 (display-wbs))
+
                ; Fields (continued) and construction
-               (set-up-display)
+               (set-up-display) ; Set up toolbar
                (define main-panel (new panel% [parent this]   ; The panel in which the work breakdown structure is displayed
                                        [style (list 'vscroll 'auto-hscroll)]
                                        [alignment (list 'left 'top)]))))
