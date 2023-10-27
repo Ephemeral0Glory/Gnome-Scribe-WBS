@@ -51,11 +51,15 @@
                                   (send req toggle-status)
                                   (send parent-req sort-subreqs)
                                   (update-wbs))])
-                 (new text-field% [parent req-panel]
-                      [label "Name:"]
-                      [init-value (send req get-name)]
-                      [callback (lambda (field event)
-                                  (send req update-name (send field get-value)))])
+                 (send (new text-field% [parent req-panel]
+                            [label "Name:"]
+                            [init-value (send req get-name)]
+                            [callback (lambda (field event)
+                                        (send req update-name (send field get-value)))])
+                       set-field-background
+                       (if (send req get-status)
+                           (make-color 150 250 160) ; Green for complete
+                           (make-color 255 175 175))) ; Red for incomplete
                  (new button% [parent req-panel]
                       [label "Add Sub-Req"]
                       [callback (lambda (button event)
