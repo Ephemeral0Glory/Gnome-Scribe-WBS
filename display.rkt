@@ -25,9 +25,14 @@
                
                (define (display-req req parent-req container) ; Creates and displays a requirement in a panel
                  ; Requirement panel (with sub-requirements)
-                 (define panel (new collapse-vert-panel% [parent container]
-                                    [vert-margin 2]
-                                    [horiz-margin 6]
+                 (define high-panel (new horizontal-panel% [parent container]
+                                         [style (list 'border)]
+                                         [border 2]
+                                         [stretchable-height #f]))
+                 (unless (eq? container main-panel) (new panel% [parent high-panel] ; Spacer panel offsets sub-reqs
+                                                         [min-width 20]
+                                                         [stretchable-width #f]))
+                 (define panel (new collapse-vert-panel% [parent high-panel]
                                     [alignment (list 'left 'center)]
                                     [stretchable-height #f]))
                  ; Requirement data panel
@@ -78,7 +83,7 @@
                       [label "Delete"]
                       [callback (lambda (button event)
                                   (send parent-req remove-subreq req)
-                                  (send container delete-child panel)
+                                  (send container delete-child high-panel)
                                   (update-wbs))])
 
                  ; Display subrequirements
@@ -86,12 +91,12 @@
                        #:unless (empty? req))
                    (display-req subreq req panel)))
 
-               (define (get-checkbox panel)                   ; Retrieves the check-box widget from a req-panel
-                 (second (send (first (send panel get-children)) get-children)))
+               (define (get-checkbox high-panel)                   ; Retrieves the check-box widget from a high-panel
+                 (second (send (first (send (second (send high-panel get-children)) get-children)) get-children)))
 
                (define (sort-panels panels)                   ; Sorts the given subreq panels in the same way as the subreqs
                  (append (list (first panels)) ; First panel is the horizontal req-data panel
-                         (sort (rest panels) ; Sub-requirement panels
+                         (sort (rest panels) ; Sub-requirements' high-panels
                                (lambda (first second)
                                  (let ([complete1? (send (get-checkbox first) get-value)]
                                        [complete2? (send (get-checkbox second) get-value)])
