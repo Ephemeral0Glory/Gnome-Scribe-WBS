@@ -226,3 +226,10 @@
   (define frame (new wbs% [top-level-req task]))
   (send frame display-wbs)
   (send frame show #t))
+
+(unless (directory-exists? (string->path "./structures"))
+  (make-directory (string->path "./structures")))
+(define task (new req% [given-name "New Project"]))
+(define frame (new wbs% [top-level-req task]))
+(send frame display-wbs)
+(send frame show #t)
