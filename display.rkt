@@ -26,11 +26,9 @@
                (define (display-req req parent-req container) ; Creates and displays a requirement in a panel
                  ; Requirement panel (with sub-requirements)
                  (define high-panel (new horizontal-panel% [parent container]
-                                         [style (list 'border)]
-                                         [border 2]
                                          [stretchable-height #f]))
                  (unless (eq? container main-panel) (new panel% [parent high-panel] ; Spacer panel offsets sub-reqs
-                                                         [min-width 20]
+                                                         [min-width 19]
                                                          [stretchable-width #f]))
                  (define panel (new collapse-vert-panel% [parent high-panel]
                                     [alignment (list 'left 'center)]
@@ -126,14 +124,24 @@
                  (new button% [parent panel]
                       [label "Open"]
                       [callback (lambda (button event)
-                                  (let ([file-path (get-file)])
+                                  (let ([file-path (get-file "Choose a file to open" ; Message
+                                                             this                    ; Parent
+                                                             #f #f                   ; Directory and filename
+                                                             ".gss"                  ; Extension
+                                                             null                    ; Style
+                                                             '(("Gnome Scribe Structure" "*.gss")))]) ; Filters
                                     (unless (boolean? file-path)
                                       (set! main-req (open-wbs file-path))
                                       (reset-wbs))))])
                  (new button% [parent panel]
                       [label "Save"]
                       [callback (lambda (button event)
-                                  (let ([file-path (put-file)])
+                                  (let ([file-path (put-file "Save structure as" ; Message
+                                                             this #f             ; Parent and directory
+                                                             (string-downcase (send main-req get-name)) ; Filename
+                                                             ".gss"              ; Extension
+                                                             null                ; Style
+                                                             '(("Gnome Scribe Structure" "*.gss")))])  ; Filters
                                     (unless (boolean? file-path)
                                       (save-wbs file-path main-req))))]))
 
